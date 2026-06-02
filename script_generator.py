@@ -1,23 +1,32 @@
 import openai
 import os
 
-def generate_script(reddit_data, style_profile):
+def generate_script(data, style_profile, source="reddit"):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set.")
 
     client = openai.OpenAI(api_key=api_key)
 
-    post = reddit_data["post"]
-    comments = reddit_data["comments"]
     hook = style_profile.get("hook_formula", "Bhai ye dekho...")
     writing_prompt = style_profile.get("writing_prompt", "")
+    comments = data.get("comments", [])
 
-    comments_text = "\n".join(
-        f"- {c['body']}" for c in comments[:15]
-    )
+    comments_text = "\n".join(f"- {c['body']}" for c in comments[:15])
 
-    user_message = f"""Reddit Post from r/{post['subreddit']}:
+    if source == "x":
+        post = data["post"]
+        user_message = f"""Tweet by @{post['username']}:
+"{post['text']}"
+
+Top Replies:
+{comments_text}
+
+Write a 30-60 second Instagram Reel script reacting to this tweet and its replies. Start with "{hook}". Pick the funniest replies and react to them one by one. End on the best line — no outro."""
+
+    else:
+        post = data["post"]
+        user_message = f"""Reddit Post from r/{post['subreddit']}:
 Title: {post['title']}
 {f"Body: {post['body']}" if post['body'] else ""}
 

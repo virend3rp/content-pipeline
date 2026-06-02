@@ -16,7 +16,7 @@ def load_styles():
             styles[f.stem] = json.load(file)
     return styles
 
-tab1, tab2, tab3 = st.tabs(["Reddit → Script", "Add Style", "Style Library"])
+tab1, tab2, tab3, tab4 = st.tabs(["Reddit → Script", "X → Script", "Add Style", "Style Library"])
 
 # ── Tab 1: Reddit → Script ──────────────────────────────────────────────────
 with tab1:
@@ -49,8 +49,39 @@ with tab1:
                 except Exception as e:
                     st.error(f"Error: {e}")
 
-# ── Tab 2: Add Style ────────────────────────────────────────────────────────
+# ── Tab 2: X → Script ───────────────────────────────────────────────────────
 with tab2:
+    st.header("X → Script")
+
+    styles = load_styles()
+    if not styles:
+        st.warning("No style profiles found. Add one in the 'Add Style' tab.")
+    else:
+        x_url = st.text_input("Tweet URL", placeholder="https://x.com/user/status/...")
+        x_style = st.selectbox("Style Profile", list(styles.keys()), key="x_style")
+
+        if st.button("Generate Script", type="primary", key="x_generate"):
+            if not x_url:
+                st.error("Please enter a tweet URL.")
+            else:
+                try:
+                    with st.spinner("Scraping tweet..."):
+                        from x_scraper import scrape_x_post
+                        x_data = scrape_x_post(x_url)
+
+                    with st.spinner("Writing script..."):
+                        from script_generator import generate_script
+                        script = generate_script(x_data, styles[x_style], source="x")
+
+                    st.subheader("Your Script")
+                    st.text_area("", script, height=400, key="x_output")
+                    st.download_button("Download Script", script, file_name="script.txt", key="x_download")
+
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+# ── Tab 3: Add Style ────────────────────────────────────────────────────────
+with tab3:
     st.header("Add Style Profile")
     st.info("Supports YouTube channels. For Instagram, download videos locally and upload transcripts below.")
 
@@ -95,8 +126,8 @@ with tab2:
             except Exception as e:
                 st.error(f"Pipeline failed: {e}")
 
-# ── Tab 3: Style Library ─────────────────────────────────────────────────────
-with tab3:
+# ── Tab 4: Style Library ─────────────────────────────────────────────────────
+with tab4:
     st.header("Style Library")
 
     styles = load_styles()
