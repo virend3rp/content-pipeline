@@ -3,3 +3,4 @@ openai
 groq
 yt-dlp
 requests
+praw
